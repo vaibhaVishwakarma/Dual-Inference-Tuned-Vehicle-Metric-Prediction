@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Car Performance Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; padding-top: 50px; padding-bottom: 50px; }
+        
+        /* Main Card Styling */
+        .predict-card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        .header-section { background: #1967D2; color: white; padding: 25px; }
+        
+        /* Architecture Image Styling */
+        .arch-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            cursor: zoom-in; /* Change cursor to indicate it's clickable */
+            transition: transform 0.3s ease;
+        }
+        .arch-container:hover { transform: scale(1.02); border: 1px solid #1967D2; }
+        
+        .arch-img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        /* Modal Customization */
+        .modal-xl { max-width: 90%; }
+        .modal-body img { width: 100%; height: auto; }
+
+        /* Form and Text Styling */
+        .form-label { font-weight: 600; color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary { background-color: #1967D2; border: none; font-weight: bold; padding: 14px; transition: 0.3s; }
+        .btn-primary:hover { background-color: #1557b0; transform: translateY(-2px); }
+        .result-box { border-radius: 10px; padding: 20px; margin-top: 20px; border-left: 5px solid #1967D2; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid px-md-5">
+    <div class="row justify-content-center align-items-stretch g-5">
+        
+        <div class="col-lg-5 col-xl-4 order-last order-lg-first">
+            <div class="arch-container text-center" data-bs-toggle="modal" data-bs-target="#archModal">
+                <h6 class="text-primary fw-bold mb-3">SYSTEM ARCHITECTURE</h6>
+                <img src="/images/architecture.png" alt="System Architecture" class="arch-img">
+                <p class="small text-muted mt-3">Click image to enlarge logic flow</p>
+            </div>
+        </div>
+
+        <div class="col-lg-7 col-xl-6">
+            <div class="card predict-card">
+                <div class="header-section text-center">
+                    <h2 class="mb-1 fw-bold">Vehicle Intelligence Dashboard</h2>
+                    <p class="small mb-0 opacity-75">Hyper-Parameter Tuned Inference Engine</p>
+                </div>
+                
+                <div class="card-body p-4 p-xl-5">
+                    <div class="mb-4">
+                        <label class="form-label text-primary">⚡ Quick Demo Presets</label>
+                        <select id="preset_selector" class="form-select form-select-lg border-primary" onchange="loadPreset()">
+                            <option value="">-- Choose a configuration --</option>
+                            <option value="0">Acura Compact (2.0L 4-Cyl)</option>
+                            <option value="1">BMW Luxury SUV (3.0L 6-Cyl)</option>
+                            <option value="2">Ford Muscle (5.0L 8-Cyl)</option>
+                            <option value="3">Economy Hatch (1.2L 3-Cyl)</option>
+                            <option value="4">Heavy Duty SUV (6.2L 8-Cyl)</option>
+                            <option value="5">BMW Diesel Mid-size (2.0L 4-Cyl)</option>
+                        </select>
+                    </div>
+
+                    <form action="/predict_all" method="post">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Engine Displacement (L)</label>
+                                <input type="number" step="0.1" name="displacement" id="disp" class="form-control" value="{{ inputs.displacement if inputs else '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Cylinders</label>
+                                <input type="number" name="cylinders" id="cyl" class="form-control" value="{{ inputs.cylinders if inputs else '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City Economy (km/L)</label>
+                                <input type="number" step="0.01" name="city_kmpl" id="ckmpl" class="form-control" value="{{ inputs.city_kmpl if inputs else '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Highway Economy (km/L)</label>
+                                <input type="number" step="0.01" name="highway_kmpl" id="hkmpl" class="form-control" value="{{ inputs.highway_kmpl if inputs else '' }}" required>
+                            </div>
+
+                            <div class="col-12 mt-4 mb-2"><hr></div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Manufacturer</label>
+                                <select name="make_std" id="make" class="form-select">
+                                    {% for opt in ['bmw', 'acura', 'ford', 'other'] %}
+                                    <option value="{{ opt }}" {% if inputs and inputs.make_std == opt %}selected{% endif %}>{{ opt|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Class</label>
+                                <select name="class_std" id="class" class="form-select">
+                                    {% for opt in ['compact', 'suv_small', 'mid-size'] %}
+                                    <option value="{{ opt }}" {% if inputs and inputs.class_std == opt %}selected{% endif %}>{{ opt|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Drive</label>
+                                <select name="drive_std" id="drive" class="form-select">
+                                    {% for opt in ['awd', 'fwd', 'unknown'] %}
+                                    <option value="{{ opt }}" {% if inputs and inputs.drive_std == opt %}selected{% endif %}>{{ opt|upper }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fuel Type</label>
+                                <select name="fuel_std" id="fuel" class="form-select">
+                                    {% for opt in ['petrol', 'diesel'] %}
+                                    <option value="{{ opt }}" {% if inputs and inputs.fuel_std == opt %}selected{% endif %}>{{ opt|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Transmission</label>
+                                <select name="trans_std" id="trans" class="form-select">
+                                    {% for opt in ['automatic', 'manual'] %}
+                                    <option value="{{ opt }}" {% if inputs and inputs.trans_std == opt %}selected{% endif %}>{{ opt|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mt-5 shadow-sm">🚀 RUN AI INFERENCE</button>
+                    </form>
+
+                    {% if prediction_text %}
+                    <div class="result-box bg-light shadow-sm">
+                        <div class="row align-items-center">
+                            <div class="col-sm-6 border-end mb-3 mb-sm-0">
+                                <small class="text-muted d-block text-uppercase small fw-bold">D1: Efficiency</small>
+                                <span class="h4 fw-bold text-primary">{{ prediction_text }} <small class="h6">km/L</small></span>
+                            </div>
+                            <div class="col-sm-6 ps-sm-4">
+                                <small class="text-muted d-block text-uppercase small fw-bold">D2: CO2 Emissions</small>
+                                <span class="h4 fw-bold text-success">{{ prediction_text_2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="archModal" tabindex="-1" aria-labelledby="archModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-primary fw-bold" id="archModalLabel">System Architecture Logic Flow</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body bg-light text-center">
+        <img src="/images/architecture.png" alt="Full System Architecture">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const presets = [
+    { disp: 2.0, cyl: 4, ckmpl: 9.90, hkmpl: 6.70, make: 'acura', class: 'compact', drive: 'unknown', fuel: 'petrol', trans: 'automatic' },
+    { disp: 3.0, cyl: 6, ckmpl: 11.50, hkmpl: 8.20, make: 'bmw', class: 'suv_small', drive: 'awd', fuel: 'petrol', trans: 'automatic' },
+    { disp: 5.0, cyl: 8, ckmpl: 15.10, hkmpl: 10.40, make: 'ford', class: 'mid-size', drive: 'awd', fuel: 'petrol', trans: 'automatic' },
+    { disp: 1.2, cyl: 3, ckmpl: 6.20, hkmpl: 4.80, make: 'other', class: 'compact', drive: 'fwd', fuel: 'petrol', trans: 'manual' },
+    { disp: 6.2, cyl: 8, ckmpl: 18.50, hkmpl: 12.10, make: 'other', class: 'suv_small', drive: 'awd', fuel: 'petrol', trans: 'automatic' },
+    { disp: 2.0, cyl: 4, ckmpl: 7.20, hkmpl: 5.50, make: 'bmw', class: 'mid-size', drive: 'fwd', fuel: 'diesel', trans: 'automatic' }
+];
+
+function loadPreset() {
+    const idx = document.getElementById('preset_selector').value;
+    if (idx === "") return;
+    const p = presets[parseInt(idx)];
+    document.getElementById('disp').value = p.disp;
+    document.getElementById('cyl').value = p.cyl;
+    document.getElementById('ckmpl').value = p.ckmpl;
+    document.getElementById('hkmpl').value = p.hkmpl;
+    document.getElementById('make').value = p.make;
+    document.getElementById('class').value = p.class;
+    document.getElementById('drive').value = p.drive;
+    document.getElementById('fuel').value = p.fuel;
+    document.getElementById('trans').value = p.trans;
+}
+</script>
+</body>
+</html>
