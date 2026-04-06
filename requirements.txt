@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
-gunicorn
 pandas
 joblib
 jinja2
