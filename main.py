@@ -102,10 +102,14 @@ async def predict_all(
     res_city_kmpl = get_d1_prediction(cylinders, displacement, highway_kmpl, make_std, class_std, drive_std, fuel_std, trans_std)
     res_co2 = get_d2_prediction(displacement, cylinders, highway_kmpl, res_city_kmpl, make_std, class_std, drive_std, fuel_std, trans_std)
     
-    return templates.TemplateResponse("home.html", {
-        "request": request,
-        "inputs": user_inputs,  # <--- THIS PASSES DATA BACK
-        "prediction_text": f"{res_city_kmpl:.2f}",
-        "prediction_text_2": f"{res_co2:.2f} g/km"
-    })
+    return templates.TemplateResponse(
+        request=request, 
+        name="home.html", 
+        context={
+            "request": request,
+            "inputs": user_inputs,
+            "prediction_text": f"{res_city_kmpl:.2f}",
+            "prediction_text_2": f"{res_co2:.2f} g/km"
+        }
+    )
 
