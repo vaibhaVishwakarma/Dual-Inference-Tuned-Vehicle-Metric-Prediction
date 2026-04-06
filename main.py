@@ -70,8 +70,12 @@ def get_d2_prediction(displacement, cylinders, hwy_kmpl, city_kmpl, make, car_cl
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
-
+   # New, explicit way
+    return templates.TemplateResponse(
+        request=request, 
+        name="home.html", 
+        context={"request": request}
+    )
 
 @app.post("/predict_all", response_class=HTMLResponse)
 async def predict_all(
