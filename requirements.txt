@@ -1,8 +1,9 @@
 fastapi
 uvicorn[standard]
+gunicorn
 pandas
 joblib
 jinja2
 python-multipart
-scikit-learn=1.6.1
+scikit-learn==1.6.1
 xgboost
